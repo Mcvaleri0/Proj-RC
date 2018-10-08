@@ -139,6 +139,7 @@ commandsTCP = { 'AUT': authenticateUser  ,
 commandsUDP = { 'REG': registerBS,
                 'UNR': deleteBS  }
 
+commands = [commandsTCP, commandsUDP]
 
 if (argc != 1 and argc != 3):
     print("Incorrect number of arguments. Ex: python CS.py [-p CSport]")
@@ -178,7 +179,7 @@ try:
 
             i_command = receiveMessage()
             try:
-                commandsTCP[i_command[0]]()
+                commands[mode][i_command[0]]()
             except:
                 sendMessage('ERR\n')
             #    exit(0) # After child process request
