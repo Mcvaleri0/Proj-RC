@@ -6,7 +6,7 @@ import time
 
 
 # ----------------------------- Overall Functions -----------------------------
-#  -  Text and Input
+#  -  Text
 def parseText(i):
     i = i.rstrip()
     return i.split(" ")
@@ -21,8 +21,10 @@ def isNumber(s):
         return False
 
 
-# - 
-def receiveMessage(bfS, mode):
+#  -  Messages Exchange
+def receiveMessage():
+    global addrBS
+
     msg = ''
 
     if mode == 0:           #TCP
@@ -37,20 +39,27 @@ def receiveMessage(bfS, mode):
         #    msg += temp
 
     elif mode == 1:         #UDP
-        print("receive with UDP protocol")
+        msg, addrBS = sokkaUDP.recvfrom(1024)
 
-    print('Recebi: ' + msg)
+    print('Recebi por ' + mode + ': ' + msg)
 
     return parseText(msg)
 
 
-def sendMessage(msg, mode):
+def sendMessage(msg):
     if mode == 0:           #TCP
         connection.sendall(msg)
     elif mode == 1:         #UDP
-        print("send with UDP protocol")
+        sokkaUDP.sendto(msg, addrBS)    # Its only possible to send a message
+                                        # after receiving one, meanig that
+                                        # addrBS != None
+
+    print('Enviei por ' + mode + ': ' + msg)
+# -----------------------------------------------------------------------------
 
 
+# ----------------------------- Command Functions -----------------------------
+#  -  Interaction with User -> mode: 0
 def authenticateUser():
     if (len(i_command) != 3        or
         len(i_command[1]) != 5     or
@@ -67,15 +76,15 @@ def authenticateUser():
         f = open(filename, 'r')
         passSaved = f.read()
         if passSaved == usPass:
-            sendMessage('AUR OK\n', 0)
+            sendMessage('AUR OK\n')
         else:
-            sendMessage('AUR NOK\n', 0)
+            sendMessage('AUR NOK\n')
     else:
         f = open(filename, 'w')
         f.write(usPass)
         f.close()
         print('New User: ' + usName)
-        sendMessage('AUR NEW\n', 0)
+        sendMessage('AUR NEW\n')
 
 
 def deleteUser():
@@ -102,6 +111,7 @@ def dirDeleteUser():
     pass
 
 
+#  -  Interaction with BS -> mode: 1
 def registerBS():
     pass
 
@@ -109,19 +119,14 @@ def registerBS():
 def deleteBS():
     pass
 
-
-def cmDebug():
-    pass
+# -----------------------------------------------------------------------------
 
 
-def cmDebug():
-    global debbug
-    debbug = not debbug
-
-
+# --------------------------------- main --------------------------------------
 argc   = len(sys.argv)
 csName = socket.gethostname()
 csPort = 58049
+addrBS
 
 commandsTCP = { 'AUT': authenticateUser  ,
                 'DLU': deleteUser        ,
@@ -158,25 +163,26 @@ sokkas = [sokkaTCP, sokkaUDP]
 try:
     while(True):
         # we wait until a socket its ready to be read
-        inputread, outputready, exceptionsready = select.select(sokkas, [], [])   # we dont have a socket for outputing and for exceptions.
-                                                    # its always the same socket
+        inputread, outputready, exceptionsready = select.select(sokkas, [], [])
+
         for sokka in inputread:
-            if sokka == sokkaTCP:   # client requested something
+            if sokka == sokkaTCP:   # Client requested something
+                mode = 0
                 connection, clientAddr = sokkaTCP.accept()
-                #pid        = os.fork()
 
-                #if pid == 0:
-                #    print('ola sou o filho')
-                i_command = receiveMessage(128, 0)
+            elif sokka == sokkaUDP: # BS requested something
+                mode = 1
 
-                try:
-                    commandsTCP[i_command[0]]()
-                except:
-                    sendMessage('ERR\n', 0)
-                #    exit(0) # After 
+            #pid = os.fork()
+            #if pid == 0:
 
-            elif sokka == sokkaUDP:
-                print('Ola sou o udp e nao devia de estar a falar')
+            i_command = receiveMessage()
+            try:
+                commandsTCP[i_command[0]]()
+            except:
+                sendMessage('ERR\n')
+            #    exit(0) # After child process request
+                
 except:
     print('\nShuting down server correctly')
     sokkaTCP.shutdown(socket.SHUT_RDWR)
