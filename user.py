@@ -5,7 +5,7 @@ import time
 
 
 
-debbug = False
+debbug = True
 
 
 
@@ -311,7 +311,7 @@ def cmBackup():
                 switchConnection(csName, csPort)
 
             else:
-                print('Number of files not suported. Only 20 files suported per folder')
+                print('Number of files not suported. The number of files must be between 0 and 20')
         else:
             print('Error - Invalid directory name.\nDirectory name should not contain spaces and should have less than 20 characters or directory does not exit')
 
@@ -452,19 +452,22 @@ for i in range(argc):
 
 getInput()
 
-# app cycle
-while (i_command[0] != 'exit'):
-    # Connect to CS
-    connectToServer(csName, csPort)
+try:
+    # app cycle
+    while (i_command[0] != 'exit'):
+        # Connect to CS
+        connectToServer(csName, csPort)
 
-    # Do command
-    try:
-        commands[i_command[0]]()
-    except KeyError:
-        print('Comando invalido')
+        # Do command
+        try:
+            commands[i_command[0]]()
+        except KeyError:
+            print('Comando invalido')
 
-    sokka.close()   # sokka is closed because is established a new TCP session
-                    # for each command given by the user
+        sokka.close()   # sokka is closed because is established a new TCP session
+                        # for each command given by the user
 
-    # Attain new command
-    getInput()
+        # Attain new command
+        getInput()
+except:
+    print('Closing App') # closing app correctly
