@@ -235,6 +235,7 @@ def cmDelUser():
     global logged
 
     if not loggedin(): return
+    if not properArgumentCount(0,"deluser"): return
 
     if verifyAut():
         ans = contactServer('DLU\n', 8, 0)
@@ -356,7 +357,8 @@ def cmRestore():
 
 def cmDirList():
     if not loggedin(): return
-
+    if not properArgumentCount(0,"dirlist"): return
+    
     if verifyAut():
         ans = contactServer('LSD\n', 32, 1)
 
