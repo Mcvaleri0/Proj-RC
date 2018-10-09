@@ -23,7 +23,7 @@ def isNumber(s):
 
 #  -  Messages Exchange
 def receiveMessage():
-    global addrBS
+    global addrCS
 
     msg = ''
 
@@ -58,7 +58,6 @@ def sendMessage(msg):
 
 
 #  -  Auxiliary
-def registerBS()
 # -----------------------------------------------------------------------------
 
 
@@ -75,52 +74,59 @@ def authenticateUser():
     usName   = i_command[1]
     usPass   = i_command[2]
     filename = 'user_' + usName + '.txt'
+    msg      = 'User ' + usName + ': '
+
 
     if os.path.isfile(filename):
         f = open(filename, 'r')
         passSaved = f.read()
         if passSaved == usPass:
+            print(msg + 'Access Permited')
             sendMessage('AUR OK\n')
         else:
+            print(msg + 'Access Denied')
             sendMessage('AUR NOK\n')
     else:
         f = open(filename, 'w')
         f.write(usPass)
         f.close()
-        print('New User: ' + usName)
+        print(msg + 'Created')
         sendMessage('AUR NEW\n')
 
 
-def deleteUser():
+def uploadUser():
     pass
     
 
-def backupUser():
+def checkoutUser():
     pass
     
-
-def restoreUser():
-    pass
-
-
-def dirlistUser():
-    pass
-
-
-def filelistUser():
-    pass
-
-
-def dirDeleteUser():
-    pass
 
 
 #  -  Interaction with CS -> mode: 1
 def registerBS():
+    msg = 'REG ' + str(socket.gethostbyname(bsName)) + ' ' + str(bsPort)
+    sendMessage(msg)
+    print('Trying to regist')
+    
+    msg = receiveMessage()
+    if msg[1] == 'OK':
+        print('Registration permited')
+        return
+    elif msg[1] == 'NOK':
+        print('Registration Denied\nTrying again...')
+        registerBS()
+    elif msg[1] == 'ERR':   # this is not supose to happen
+        print('Protocol message has a sintax error')
+
+
+def filelist():
     pass
 
+def registerNewUser():
+    pass
 
-def deleteBS():
+def deleteDir():
     pass
 
 # -----------------------------------------------------------------------------
@@ -152,10 +158,13 @@ if (argc != 1 and argc != 3 and argc != 5 and argc != 7):
 for i in range(argc):
     if sys.argv[i] == '-b':
         bsPort = int(sys.argv[i+1])
-	elif sys.argv[i] == '-n':
-		csName = sys.argv[i+1]
-	elif sys.argv[i] == '-p':
-		csPort = int(sys.argv[i+1])
+    elif sys.argv[i] == '-n':
+        csName = sys.argv[i+1]
+    elif sys.argv[i] == '-p':
+        csPort = int(sys.argv[i+1])
+
+print('BSname: ' + bsName + '\nBSport: ' + str(bsPort) + '\nConnected to:')
+print('\tCSname: ' + csName + '\n\tCSport: ' + str(csPort))
 
 
 sokkaTCP = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
